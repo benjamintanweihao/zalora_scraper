@@ -26,6 +26,8 @@ receive do
 end
 ```
 
+###When should the crawler stop?
+
 
 ###Get a page
 
@@ -65,8 +67,8 @@ end
 def extract_skus(page) do
   result = %r/[A-Z]{2}[\d]{3}[A-Z]{2}[\d]{2}[A-Z]{5}/ |> Regex.scan(page)
   case is_list(result) do
-      true  -> Enum.uniq |> List.flatten  
-      false -> :ok
+    true  -> Enum.uniq |> List.flatten  
+    false -> :ok
   end
 end
 ```
