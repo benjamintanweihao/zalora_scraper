@@ -3,31 +3,12 @@
 ###Problem Statement:
 Scrape every page on zalora.sg, and return 2 columns in gzipped CSV format, containing the first 20 SKUs displayed on each page and the page name (which has the format shop.pc.X.Y)
 
-# Getting the page source
-```
-url = "http://www.zalora.sg/Ultimatum-Max-Air-Utility-Backpack-114877.html"
-HTTPotion.Response[status_code: 200, body: body] = HTTPotion.get url
 
-%r/[A-Z]{2}[\d]{3}[A-Z]{2}[\d]{2}[A-Z]{5}/ |> Regex.scan(body)
-```
-#Protocol
-
-###Starting the Process
+###Starting the crawler
 
 ```
-scraper_pid = Process.spawn(__MODULE__, :start, ["http://www.zalora.sg"])
+ZaloraScraper.Scraper.start('http://www.zalora.sg/')
 ```
-
-###What messages should it receive?
-
-```
-receive do
-
-end
-```
-
-###When should the crawler stop?
-
 
 ###Get a page
 
