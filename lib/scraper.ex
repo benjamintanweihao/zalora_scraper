@@ -15,28 +15,38 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def process_page(url) do
-    IO.puts "Processing #{url}"
+    # IO.puts "Processing #{url}"
+    
+    page = try do
+      get_page(url)
+    rescue 
+      error -> 
+        # IO.inspect error
+        ""
+    end
 
-    url
-    |> 
-    get_page 
+    page_name = page |> extract_page_name
+    
+    if String.length(page_name)> 0 do
+      IO.puts page_name
+    end
+
+    page
     |> 
     extract_links
     |> 
     Enum.filter(fn(x) -> String.starts_with?(x, "/") end)
     |>
     Enum.map(fn(x) -> "http://www.zalora.sg#{x}" end) 
-    |>  
-    Enum.shuffle
-    |>
-    Enum.take 2
   end
 
 
   def extract_links(page) do
-    %r/<a[^>]* href="([^"]*)"/ 
-    |> Regex.scan(page) 
-    |> Enum.map(fn [_,x] -> x end)
+    result = %r/<a[^>]* href="([^"]*)"/ |> Regex.scan(page) 
+    case is_list(result) do
+      true  -> result |> Enum.map(fn [_,x] -> x end)
+      false -> []
+    end
   end
 
   def get_page(url) do
@@ -54,7 +64,7 @@ defmodule ZaloraScraper.Scraper do
     result = %r/.*=\s\"(.*.html).*/ |> Regex.run(page)
     case is_list(result) do 
       true  -> List.last(result)
-      false -> :ok
+      false -> "" 
     end
   end
 
