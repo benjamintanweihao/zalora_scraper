@@ -1,15 +1,33 @@
 defmodule ZaloraScraper.Scraper do
+  defrecord Link, url: ""  
+
   alias HTTPotion.Response
 
   @user_agent  [ "User-agent": "Elixir benjamintanweihao@gmail.com"]
 
   def start(url) do
     HTTPotion.start
+    db_setup
     crawl([url])
   end
 
+  def db_setup do
+    :ets.new(:visited_links,   [:named_table, {:keypos, Link.__record__(:index, :url)+1}])
+    :ets.new(:unvisited_links, [:named_table, {:keypos, Link.__record__(:index, :url)+1}])
+  end
+
   def crawl(urls) do
-    pmap(urls, fn(u) -> process_page(u) end) 
+    # crawl urls that do not exist in visited links
+    urls 
+    |> 
+    Enum.filter(fn(url) -> Enum.empty?(:ets.lookup(:visited_links, url)) end)
+    |>
+    Enum.map(fn(url) -> 
+               :ets.insert :unvisited_links, Link.new(url: url) 
+               url
+             end)
+    |>
+    pmap(fn(url) -> process_page(url) end) 
     |> 
     List.flatten
     |> 
@@ -23,7 +41,7 @@ defmodule ZaloraScraper.Scraper do
       get_page(url)
     rescue 
       error -> 
-        # IO.inspect error
+        IO.inspect error
         ""
     end
 
@@ -54,6 +72,9 @@ defmodule ZaloraScraper.Scraper do
     case HTTPotion.get(url, @user_agent, [ timeout: 600000 ]) do
       Response[body: body, status_code: status, headers: _headers]
       when status in 200..299 ->
+        IO.puts "INSERTING!: #{url}"
+        :ets.insert(:visited_links, ZaloraScraper.Scraper.Link.new(url: url))
+        IO.puts "INSERTED?"
         body
 
       Response[body: _body, status_code: _status, headers: _headers] ->
