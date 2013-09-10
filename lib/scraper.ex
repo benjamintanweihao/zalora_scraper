@@ -1,6 +1,8 @@
 defmodule ZaloraScraper.Scraper do
   alias HTTPotion.Response
 
+  @user_agent  [ "User-agent": "Elixir benjamintanweihaogmail.com"]
+
   def start(url) do
     HTTPotion.start
     crawl([url])
@@ -50,7 +52,7 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def get_page(url) do
-    case HTTPotion.get(url) do
+    case HTTPotion.get(url, @user_agent) do
       Response[body: body, status_code: status, headers: _headers]
       when status in 200..299 ->
         body
