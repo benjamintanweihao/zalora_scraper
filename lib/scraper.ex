@@ -1,7 +1,7 @@
 defmodule ZaloraScraper.Scraper do
   alias HTTPotion.Response
 
-  @user_agent  [ "User-agent": "Elixir benjamintanweihaogmail.com"]
+  @user_agent  [ "User-agent": "Elixir benjamintanweihao@gmail.com"]
 
   def start(url) do
     HTTPotion.start
@@ -17,13 +17,13 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def process_page(url) do
-    # IO.puts "Processing #{url}"
+    IO.puts "Processing #{url}"
     
     page = try do
       get_page(url)
     rescue 
       error -> 
-        IO.inspect error
+        # IO.inspect error
         ""
     end
 
