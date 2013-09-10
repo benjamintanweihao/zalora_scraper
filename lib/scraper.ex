@@ -42,7 +42,6 @@ defmodule ZaloraScraper.Scraper do
     Enum.map(fn(x) -> "http://www.zalora.sg#{x}" end) 
   end
 
-
   def extract_links(page) do
     result = %r/<a[^>]* href="([^"]*)"/ |> Regex.scan(page) 
     case is_list(result) do
@@ -52,7 +51,7 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def get_page(url) do
-    case HTTPotion.get(url, @user_agent) do
+    case HTTPotion.get(url, @user_agent, [ timeout: 600000 ]) do
       Response[body: body, status_code: status, headers: _headers]
       when status in 200..299 ->
         body
