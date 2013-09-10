@@ -21,7 +21,7 @@ defmodule ZaloraScraper.Scraper do
       get_page(url)
     rescue 
       error -> 
-        # IO.inspect error
+        IO.inspect error
         ""
     end
 
