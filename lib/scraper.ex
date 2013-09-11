@@ -14,10 +14,26 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def db_setup do
-    # Note: Important to set it to public, because we want our spawned process to add stuff.
+    # NOTE: Important to set it to public, because we want our spawned process to add stuff.
     :ets.new(:pages,           [:named_table, :public, {:keypos, Page.__record__(:index, :name)+1}])
     :ets.new(:visited_links,   [:named_table, :public, {:keypos, Link.__record__(:index, :url)+1}])
     :ets.new(:unvisited_links, [:named_table, :public, {:keypos, Link.__record__(:index, :url)+1}])
+  end
+  
+  def get_unvisited_links(count) do
+    get_unvisited_links(count, [])
+  end
+
+  def get_unvisited_links(0, links), do: links
+
+  def get_unvisited_links(count, links) do
+    case :ets.last(:unvisited_links) do
+      :"$end_of_table" ->
+        get_unvisited_links(0, links)
+      url ->
+        :ets.delete :unvisited_links, url 
+        get_unvisited_links(count-1, [url|links])
+    end
   end
 
   def crawl(urls, depth) do
@@ -31,14 +47,15 @@ defmodule ZaloraScraper.Scraper do
             end)
     |>
     pmap(fn(url) -> process_page(url, depth) end) 
-    |> 
-    List.flatten
-    |> 
+
+    # NOTE: Push out 100 links
+    get_unvisited_links(100) 
+    |>
     crawl(depth+1)
   end
 
   def process_page(url, depth) do
-    # IO.puts "Processing #{url} (#{depth})"
+    IO.puts "Processing #{url} (#{depth})"
     
     page = try do
       get_page(url)
@@ -57,13 +74,16 @@ defmodule ZaloraScraper.Scraper do
       :ets.insert :pages, Page.new(name: page_name, skus: skus)
     end
 
+    # Here we insert the links that we have not visited yet
     page
     |> 
     extract_links
     |> 
     Enum.filter(fn(x) -> String.starts_with?(x, "/") end)
     |>
-    Enum.map(fn(x) -> "http://www.zalora.sg#{x}" end) 
+    Enum.filter(fn(x) -> Enum.empty?(:ets.lookup(:visited_links, x)) end)
+    |>
+    Enum.each(fn(x) -> :ets.insert_new :unvisited_links, Link.new(url: "http://www.zalora.sg#{x}") end)
   end
 
   def extract_links(page) do
@@ -75,10 +95,10 @@ defmodule ZaloraScraper.Scraper do
   end
 
   def get_page(url) do
+    :ets.delete :unvisited_links, url 
     case HTTPotion.get(url, @user_agent, [ timeout: 600000 ]) do
       Response[body: body, status_code: status, headers: _headers] when status in 200..299 ->
-        :ets.insert :visited_links, Link.new(url: url)
-        :ets.delete :unvisited_links, url 
+        :ets.insert_new :visited_links, Link.new(url: url)
         body
 
       Response[body: _body, status_code: _status, headers: _headers] ->
