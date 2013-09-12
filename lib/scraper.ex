@@ -9,7 +9,6 @@ defmodule ZaloraScraper.Scraper do
   def start(url) do
     db_setup
     :tv.start
-    HTTPotion.start
     crawl([url], 0)
   end
 
