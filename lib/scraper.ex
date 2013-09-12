@@ -49,7 +49,7 @@ defmodule ZaloraScraper.Scraper do
     pmap(fn(url) -> process_page(url, depth) end) 
 
     # NOTE: Push out 100 links
-    get_unvisited_links(100) 
+    get_unvisited_links(1000) 
     |>
     crawl(depth+1)
   end
